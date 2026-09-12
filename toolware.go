@@ -6,7 +6,7 @@ import (
 )
 
 type Request struct {
-	Toolname string
+	ToolName string
 	Args     map[string]any // writing any feels like torture
 }
 

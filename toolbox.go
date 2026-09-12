@@ -28,3 +28,8 @@ func (t *Toolbox) Group(fn func(*Toolbox)) *Toolbox {
 func (t *(Toolbox)) Register(name string, h Handler) {
 	t.registry[name] = chain(t.middlewares, h)
 }
+
+func (t *Toolbox) Get(name string) (Handler, bool) {
+	h, ok := t.registry[name]
+	return h, ok
+}
