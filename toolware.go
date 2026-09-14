@@ -2,12 +2,32 @@ package toolware
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"slices"
 )
 
 type Request struct {
 	ToolName string
 	Args     map[string]any // writing any feels like torture
+}
+
+func (r Request) Int(key string) (int, error) {
+	v, ok := r.Args[key]
+	if !ok {
+		return 0, fmt.Errorf("toolware: missing arg %q", key)
+	}
+	switch n := v.(type) {
+	case float64:
+		return int(n), nil
+	case int:
+		return n, nil
+	case json.Number:
+		i, err := n.Int64()
+		return int(i), err
+	default:
+		return 0, fmt.Errorf("toolware: arg %q is not numeric(%T)", key, v)
+	}
 }
 
 type Response struct {
