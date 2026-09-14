@@ -26,13 +26,12 @@ func RegisterADKTools(tb *toolware.Toolbox, defs []functiontool.Config) ([]tool.
 	return tools, nil
 }
 
-func toADKHandlerFunc(h toolware.Handler, name string) func(ctx agent.Context, req toolware.Request) (toolware.Response, error) {
-	return func(ctx agent.Context, req toolware.Request) (toolware.Response, error) {
-		resp := h(ctx, req)
+func toADKHandlerFunc(h toolware.Handler, name string) func(ctx agent.Context, args map[string]any) (any, error) {
+	return func(ctx agent.Context, args map[string]any) (any, error) {
+		resp := h(ctx, toolware.Request{ToolName: name, Args: args})
 		if resp.Err != nil {
-			return toolware.Response{}, resp.Err
+			return nil, resp.Err
 		}
-
-		return resp, nil
+		return resp.Result, nil
 	}
 }
