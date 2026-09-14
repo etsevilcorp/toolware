@@ -30,6 +30,52 @@ func (r Request) Int(key string) (int, error) {
 	}
 }
 
+func (r Request) Boolean(key string) (bool, error) {
+	v, ok := r.Args[key]
+	if !ok {
+		return false, fmt.Errorf("toolware: missing arg %q", key)
+	}
+	switch n := v.(type) {
+	case bool:
+		return n, nil
+	default:
+		return false, fmt.Errorf("toolware: arg %q is not boolean-ic(%T)", key, v)
+	}
+}
+
+func (r Request) String(key string) (string, error) {
+	v, ok := r.Args[key]
+	if !ok {
+		return "", fmt.Errorf("toolware: missing arg %q", key)
+	}
+	switch n := v.(type) {
+	case string:
+		return n, nil
+	case json.Number:
+		return n.String(), nil
+	default:
+		return "", fmt.Errorf("toolware: arg %q is not string-ic(%T)", key, v)
+	}
+}
+
+func (r Request) Float(key string) (float64, error) {
+	v, ok := r.Args[key]
+	if !ok {
+		return 0, fmt.Errorf("toolware: missing arg %q", key)
+	}
+	switch n := v.(type) {
+	case float64:
+		return n, nil
+	case int:
+		return float64(n), nil
+	case json.Number:
+		i, err := n.Int64()
+		return float64(i), err
+	default:
+		return 0, fmt.Errorf("toolware: arg %q is not numeric(%T)", key, v)
+	}
+}
+
 type Response struct {
 	Result any
 	Err    error
