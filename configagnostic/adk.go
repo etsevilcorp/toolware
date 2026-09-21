@@ -10,6 +10,7 @@ func ToADKConfig[I, O any](cfg Config[I, O]) (functiontool.Config, error) {
 	if err != nil {
 		return functiontool.Config{}, err
 	}
+
 	oSchema, err := jsonschema.For[O](&jsonschema.ForOptions{IgnoreInvalidTypes: true})
 	if err != nil {
 		return functiontool.Config{}, err
