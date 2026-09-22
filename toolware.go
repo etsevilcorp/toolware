@@ -20,6 +20,8 @@ func (r Request) Int(key string) (int, error) {
 	switch n := v.(type) {
 	case float64:
 		return int(n), nil
+	case float32:
+		return int(n), nil
 	case int:
 		return n, nil
 	case json.Number:
@@ -66,6 +68,8 @@ func (r Request) Float(key string) (float64, error) {
 	switch n := v.(type) {
 	case float64:
 		return n, nil
+	case float32:
+		return float64(n), nil // non-generated artifacts
 	case int:
 		return float64(n), nil
 	case json.Number:
