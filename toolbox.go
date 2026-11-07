@@ -14,8 +14,11 @@ func (t *Toolbox) Use(mw Middleware) {
 }
 
 func (t *Toolbox) With(mws ...Middleware) *Toolbox {
-	combined := make([]Middleware, len(t.middlewares))
-	copy(combined, append(t.middlewares, mws...))
+	combined := make([]Middleware, 0, len(t.middlewares)+len(mws))
+
+	combined = append(combined, t.middlewares...)
+	combined = append(combined, mws...)
+
 	return &Toolbox{middlewares: combined, registry: t.registry}
 }
 
