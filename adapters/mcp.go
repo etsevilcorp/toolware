@@ -33,8 +33,8 @@ func toMCPHandlerFunc(h toolware.Handler, name string) func(ctx context.Context,
 			Args:     args,
 		})
 		if resp.Err != nil {
-			return nil, resp.Err
+			return mcp.NewToolResultError(resp.Err.Error()), nil
 		}
-		return mcp.NewToolResultText(fmt.Sprint(resp.Result)), nil
+		return mcp.NewToolResultStructuredOnly(resp.Result), nil
 	}
 }
