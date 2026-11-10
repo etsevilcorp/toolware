@@ -1,5 +1,11 @@
 package toolware
 
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+)
+
 type Toolbox struct {
 	middlewares []Middleware
 	registry    map[string]Handler
@@ -28,8 +34,17 @@ func (t *Toolbox) Group(fn func(*Toolbox)) *Toolbox {
 	return child
 }
 
-func (t *(Toolbox)) Register(name string, h Handler) {
-	t.registry[name] = chain(t.middlewares, h)
+func (t *(Toolbox)) Register[I, O any](name string, fn func(context.Context, I) (O, error)) {
+	t.registry[name] = chain(t.middlewares, func(ctx context.Context, req Request) Response {
+		var in I
+		if len(req.Args) > 0 {
+			if err := json.Unmarshal(req.Args, &in); err != nil {
+				return Response{Err: fmt.Errorf("toolware: tool %q: bad args: %w", name, err)}
+			}
+		}
+		out, err := fn(ctx, in)
+		return Response{Result: out, Err: err}
+	})
 }
 
 func (t *Toolbox) Get(name string) (Handler, bool) {

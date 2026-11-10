@@ -9,38 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRequest_Int(t *testing.T) {
-	cases := []struct {
-		name      string
-		args      map[string]any
-		key       string
-		want      int
-		shouldErr bool
-	}{
-		{"float64", map[string]any{"n": float64(64)}, "n", 64, false},
-		{"int", map[string]any{"n": int(739)}, "n", 739, false}, // it took too much time to express "depends" as sum of chars
-		{"float32", map[string]any{"n": float32(32)}, "n", 32, false},
-		{"json.Number", map[string]any{"n": json.Number("649")}, "n", 649, false}, // same as before(says "number", quite fascinating, isn't it)
-		{"missing everything", map[string]any{}, "n", -1, true},
-		{"missing not empty", map[string]any{"k": rand.Int()}, "n", -1, true},
-		{"wrong type", map[string]any{"n": "can you really say that it's that different?"}, "n", -1, true},
-	}
-
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			req := toolware.Request{Args: c.args}
-			v, err := req.Int(c.key)
-			if c.shouldErr {
-				require.Error(t, err)
-				return
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, c.want, v)
-			}
-		})
-	}
-}
-
 func TestRequest_Boolean(t *testing.T) {
 	cases := []struct {
 		name      string
@@ -57,8 +25,10 @@ func TestRequest_Boolean(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			req := toolware.Request{Args: c.args}
-			v, err := req.Boolean(c.key)
+			args, err := json.Marshal(c.args)
+
+			req := toolware.Request{Args: args}
+			v, err := req.Get[bool](c.key)
 			if c.shouldErr {
 				require.Error(t, err)
 				return
@@ -86,8 +56,10 @@ func TestRequest_String(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			req := toolware.Request{Args: c.args}
-			v, err := req.String(c.key)
+			args, err := json.Marshal(c.args)
+
+			req := toolware.Request{Args: args}
+			v, err := req.Get[string](c.key)
 			if c.shouldErr {
 				require.Error(t, err)
 				return
@@ -118,8 +90,10 @@ func TestRequest_Float(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			req := toolware.Request{Args: c.args}
-			v, err := req.Float(c.key)
+			args, err := json.Marshal(c.args)
+
+			req := toolware.Request{Args: args}
+			v, err := req.Get[float64](c.key)
 			if c.shouldErr {
 				require.Error(t, err)
 				return

@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/etsevilcorp/toolware"
@@ -22,10 +23,9 @@ func RegisterMCPTools(tb *toolware.Toolbox, server *server.MCPServer, defs map[s
 
 func toMCPHandlerFunc(h toolware.Handler, name string) func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		raw := req.GetRawArguments()
-		args, ok := raw.(map[string]any)
-		if !ok {
-			return nil, fmt.Errorf("toolware: tool %q recieved non-map[string]any object(%T)", name, raw)
+		args, err := json.Marshal(req.GetArguments())
+		if err != nil {
+			return nil, fmt.Errorf("toolware: tool %q recieved non-json object", name)
 		}
 
 		resp := h(ctx, toolware.Request{
