@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"github.com/etsevilcorp/toolware/meta"
 )
 
 type Toolbox struct {
@@ -42,7 +44,7 @@ func (t *(Toolbox)) Register[I, O any](name string, fn func(context.Context, I) 
 				return Response{Err: fmt.Errorf("toolware: tool %q: bad args: %w", name, err)}
 			}
 		}
-		out, err := fn(ctx, in)
+		out, err := fn(meta.WithMeta(ctx, req.Meta), in)
 		return Response{Result: out, Err: err}
 	})
 }

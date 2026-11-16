@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+
+	"github.com/mark3labs/mcp-go/mcp"
 )
 
 type Request struct {
 	ToolName string
 	Args     json.RawMessage
+	Meta     mcp.Meta
 }
 
 func (r *Request) Get[T any](key string) (result T, err error) {
