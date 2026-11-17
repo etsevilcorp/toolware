@@ -104,3 +104,14 @@ func TestRequest_Float(t *testing.T) {
 		})
 	}
 }
+
+func TestGet_Args(t *testing.T) {
+	t.Run("bad args", func(t *testing.T) {
+		req := toolware.Request{Args: []byte("{is bad JSON")}
+		v, err := req.Get[any]("k")
+		require.Error(t, err)
+		var se *json.SyntaxError
+		require.ErrorAs(t, err, &se)
+		require.Nil(t, v)
+	})
+}

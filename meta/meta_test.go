@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TesMeta(t *testing.T) {
+func TestMeta(t *testing.T) {
 	k := rand.Text()
 	v := rand.Text()
 	m := mcp.NewMetaFromMap(map[string]any{k: v})
@@ -19,5 +19,5 @@ func TesMeta(t *testing.T) {
 
 	val, ok := meta.MetaFromContext(ctx)
 	require.True(t, ok)
-	require.Equal(t, v, val)
+	require.Equal(t, v, val.AdditionalFields[k])
 }
