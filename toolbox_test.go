@@ -157,3 +157,56 @@ func TestWith(t *testing.T) {
 		require.False(t, called)
 	})
 }
+
+func TestNamespace(t *testing.T) {
+	t.Run("namespacing", func(t *testing.T) {
+		tw := toolware.New()
+		tw.Namespace("namespace_", func(t *toolware.Toolbox) {
+			t.Register("final", func(ctx context.Context, _ int) (string, error) {
+				return "ok", nil
+			})
+		})
+
+		h, ok := tw.Get("namespace_final")
+		require.True(t, ok)
+		resp := h(t.Context(), toolware.Request{})
+
+		require.NoError(t, resp.Err)
+		require.Equal(t, "ok", resp.Result)
+	})
+	t.Run("outside naming", func(t *testing.T) {
+		tw := toolware.New()
+		tw.Namespace("namespace_", func(t *toolware.Toolbox) {
+			t.Register("final", func(ctx context.Context, _ int) (string, error) {
+				return "not ok", nil
+			})
+		})
+
+		tw.Register("final", func(ctx context.Context, _ int) (string, error) {
+			return "ok", nil
+		})
+
+		h, ok := tw.Get("final")
+		require.True(t, ok)
+		resp := h(t.Context(), toolware.Request{})
+
+		require.NoError(t, resp.Err)
+		require.Equal(t, "ok", resp.Result)
+	})
+	t.Run("nothing", func(t *testing.T) {
+		tw := toolware.New()
+		tw.Namespace("namespace_", func(t *toolware.Toolbox) {
+		})
+
+		tw.Register("final", func(ctx context.Context, _ int) (string, error) {
+			return "ok", nil
+		})
+
+		h, ok := tw.Get("final")
+		require.True(t, ok)
+		resp := h(t.Context(), toolware.Request{})
+
+		require.NoError(t, resp.Err)
+		require.Equal(t, "ok", resp.Result)
+	})
+}
