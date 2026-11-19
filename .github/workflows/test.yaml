@@ -1,0 +1,56 @@
+name: Go Test Workflow
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v7
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v7
+        with:
+          cache: true
+          cache-dependency-path: go.sum
+          go-version-file: go.mod
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Install tools
+        run: go install github.com/jstemmer/go-junit-report/v2@latest
+
+      - name: Run Tests
+        run: |
+          set -o pipefail
+          go test -v -json -race -covermode=atomic -coverprofile=coverage.out ./... | go-junit-report -parser gojson > report.xml
+
+      - name: Generate Coverage HTML
+        if: always()
+        run: go tool cover -html=coverage.out -o coverage.html
+
+      - name: Publish Test Results Dashboard
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Go Test Summary
+          path: report.xml
+          reporter: java-junit
+
+      - name: Upload Coverage HTML Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-coverage-report
+          path: coverage.html
+          retention-days: 14
