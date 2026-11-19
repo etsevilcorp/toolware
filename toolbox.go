@@ -29,7 +29,7 @@ func (t *Toolbox) With(mws ...Middleware) *Toolbox {
 	combined = append(combined, t.middlewares...)
 	combined = append(combined, mws...)
 
-	return &Toolbox{middlewares: combined, registry: t.registry}
+	return &Toolbox{prefix: t.prefix, middlewares: combined, registry: t.registry}
 }
 
 func (t *Toolbox) Group(fn func(*Toolbox)) *Toolbox {

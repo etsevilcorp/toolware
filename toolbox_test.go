@@ -29,7 +29,8 @@ func TestEnchainer_Chainer(t *testing.T) {
 		}
 
 		h := toolware.Chain([]toolware.Middleware{track("a"), track("b")}, final)
-		h(context.Background(), toolware.Request{})
+		resp := h(context.Background(), toolware.Request{})
+		require.NoError(t, resp.Err)
 
 		want := []string{"a:in", "b:in", "handler", "b:out", "a:out"}
 		if !reflect.DeepEqual(order, want) {
@@ -152,7 +153,6 @@ func TestWith(t *testing.T) {
 		require.True(t, ok)
 
 		resp := h(t.Context(), toolware.Request{})
-
 		require.Error(t, resp.Err)
 		require.False(t, called)
 	})
@@ -208,5 +208,137 @@ func TestNamespace(t *testing.T) {
 
 		require.NoError(t, resp.Err)
 		require.Equal(t, "ok", resp.Result)
+	})
+	t.Run("with mws", func(t *testing.T) {
+		var order []string
+
+		track := func(name string) toolware.Middleware {
+			return func(next toolware.Handler) toolware.Handler {
+				return func(ctx context.Context, req toolware.Request) toolware.Response {
+					order = append(order, name+":in")
+					resp := next(ctx, req)
+					order = append(order, name+":out")
+					return resp
+				}
+			}
+		}
+
+		tw := toolware.New()
+
+		tw.Namespace("ns_", func(t *toolware.Toolbox) {
+			t.With(track("b")).Register("final", func(ctx context.Context, _ int) (string, error) {
+				order = append(order, "handler")
+				return "ok", nil
+			})
+		})
+
+		h, ok := tw.Get("ns_final")
+		require.True(t, ok)
+
+		h(context.Background(), toolware.Request{})
+
+		want := []string{"b:in", "handler", "b:out"}
+
+		require.Equal(t, want, order)
+	})
+}
+
+func TestGroup(t *testing.T) {
+	t.Run("grouping", func(t *testing.T) {
+		tw := toolware.New()
+		tw.Group(func(t *toolware.Toolbox) {
+			t.Register("final", func(ctx context.Context, _ int) (string, error) {
+				return "ok", nil
+			})
+		})
+
+		h, ok := tw.Get("final")
+		require.True(t, ok)
+		resp := h(t.Context(), toolware.Request{})
+
+		require.NoError(t, resp.Err)
+		require.Equal(t, "ok", resp.Result)
+	})
+
+	t.Run("nothing", func(t *testing.T) {
+		tw := toolware.New()
+		tw.Group(func(t *toolware.Toolbox) {
+		})
+
+		tw.Register("final", func(ctx context.Context, _ int) (string, error) {
+			return "ok", nil
+		})
+
+		h, ok := tw.Get("final")
+		require.True(t, ok)
+		resp := h(t.Context(), toolware.Request{})
+
+		require.NoError(t, resp.Err)
+		require.Equal(t, "ok", resp.Result)
+	})
+	t.Run("with mws", func(t *testing.T) {
+		var order []string
+
+		track := func(name string) toolware.Middleware {
+			return func(next toolware.Handler) toolware.Handler {
+				return func(ctx context.Context, req toolware.Request) toolware.Response {
+					order = append(order, name+":in")
+					resp := next(ctx, req)
+					order = append(order, name+":out")
+					return resp
+				}
+			}
+		}
+
+		tw := toolware.New()
+
+		tw.Group(func(t *toolware.Toolbox) {
+			t.With(track("b")).Register("final", func(ctx context.Context, _ int) (string, error) {
+				order = append(order, "handler")
+				return "ok", nil
+			})
+		})
+
+		h, ok := tw.Get("final")
+		require.True(t, ok)
+
+		h(context.Background(), toolware.Request{})
+
+		want := []string{"b:in", "handler", "b:out"}
+
+		require.Equal(t, want, order)
+	})
+}
+
+func TestRegister(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
+		tw := toolware.New()
+		tw.Register("final", func(ctx context.Context, _ int) (string, error) {
+			return "ok", nil
+		})
+
+		h, ok := tw.Get("final")
+		require.True(t, ok)
+
+		resp := h(context.Background(), toolware.Request{})
+		require.NoError(t, resp.Err)
+
+		require.Equal(t, "ok", resp.Result)
+	})
+	t.Run("bad args", func(t *testing.T) {
+		req := toolware.Request{Args: []byte("{is bad JSON")}
+
+		tw := toolware.New()
+		tw.Register("final", func(ctx context.Context, _ int) (string, error) {
+			return "huh?", nil
+		})
+
+		h, ok := tw.Get("final")
+		require.True(t, ok)
+
+		resp := h(context.Background(), req)
+		require.Error(t, resp.Err)
+
+		require.NotEqual(t, "huh?", resp.Result)
 	})
 }
