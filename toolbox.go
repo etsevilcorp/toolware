@@ -40,7 +40,7 @@ func (t *Toolbox) Group(fn func(*Toolbox)) *Toolbox {
 
 func (t *Toolbox) Namespace(ns string, fn func(*Toolbox)) *Toolbox {
 	child := t.With()
-	child.prefix = ns + t.prefix
+	child.prefix = t.prefix + ns
 	fn(child)
 	return child
 }
