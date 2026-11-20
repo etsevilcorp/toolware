@@ -31,7 +31,5 @@ func ToMCPConfig[I, O any](cfg Config[I, O]) (mcp.Tool, error) {
 		mcp.WithDescription(cfg.Description),
 		mcp.WithRawInputSchema(iBytes),
 		mcp.WithRawOutputSchema(oBytes),
-		mcp.WithInputSchema[I](),
-		mcp.WithOutputSchema[O](),
 	), nil
 }

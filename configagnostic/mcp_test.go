@@ -22,20 +22,17 @@ func TestToMCPTool(t *testing.T) {
 		require.Equal(t, testcfg.Name, cfg.Name)
 		require.Equal(t, testcfg.Description, cfg.Description)
 
-		bi, err := json.Marshal(cfg.InputSchema)
-		require.NoError(t, err)
-		bo, err := json.Marshal(cfg.OutputSchema)
-		require.NoError(t, err)
-
 		ti, err := jsonschema.For[testInput](nil)
 		require.NoError(t, err)
 		bti, err := json.Marshal(ti)
-		require.JSONEq(t, string(bti), string(bi))
+		require.NoError(t, err)
+		require.JSONEq(t, string(bti), string(cfg.RawInputSchema))
 
 		to, err := jsonschema.For[testOutput](nil)
 		require.NoError(t, err)
 		bto, err := json.Marshal(to)
-		require.JSONEq(t, string(bto), string(bo))
+		require.NoError(t, err)
+		require.JSONEq(t, string(bto), string(cfg.RawOutputSchema))
 	})
 	t.Run("bad input", func(t *testing.T) {
 		_, err := configagnostic.ToMCPConfig(configagnostic.Config[EviltestInput, testOutput]{
